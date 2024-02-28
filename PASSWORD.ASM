@@ -9,12 +9,39 @@ HASH_MULTIPLIER equ 43d
 Start:
     push 63231d       ; password hash
 
+    call ReadPassword
+
+    pop si
+    cmp ax, si
+    je PassSuccess
+    `
+    mov si, offset cs:DENY_FRAME
+    call PrintFrame
+    jmp TerminateProgram
+
+PassSuccess:
+    mov si, offset cs:SUCCESS_FRAME
+    call PrintFrame
+
+TerminateProgram:
+    
+    mov ax, 4c00h
+    int 21h         ; terminating program
+
+
+;------------------------------------------------
+;Reads password, saves in PASS_BUF and calculates hash in ax
+;Entry: None
+;Exit : ax - hash, PASS_BUF - saved password
+;Destr: ax, bx, cx, dx, di, si
+;------------------------------------------------
+ReadPassword proc
     cld 
     xor bx, bx
     xor cx, cx
 
     mov si, HASH_MULTIPLIER
-    mov di, offset cs:WORD_BUF
+    mov di, offset cs:PASS_BUF
 InputLoop:
     cmp cs:word ptr LOOP_COUNTER, 0
     je EndInput
@@ -42,22 +69,8 @@ InputLoop:
 EndInput:   
     mov ax, cx
 
-    pop si
-    cmp ax, si
-    je PassSuccess
-    
-    mov si, offset cs:DENY_FRAME
-    call PrintFrame
-    jmp TerminateProgram
-
-PassSuccess:
-    mov si, offset cs:SUCCESS_FRAME
-    call PrintFrame
-
-TerminateProgram:
-    
-    mov ax, 4c00h
-    int 21h         ; terminating program
+    ret
+    endp
 
 
 ; ax - print, dx - str
@@ -92,15 +105,12 @@ include frame.asm
 SUCCESS_FRAME db '40 15 7a 1 permission success$'
 DENY_FRAME    db '40 15 40 1 permission denied$'
 
-SUCCESS_STR db 'permission success$'
-DENY_STR    db 'permission denied$'
+;STR1 db 'READEN VAL: $'
+;STR2 db 'SAVED CX1 : $'
+;STR3 db 'CALCULATED AX: $'
+;STR4 db 'SAVED CX2 : $'
 
-STR1 db 'READEN VAL: $'
-STR2 db 'SAVED CX1 : $'
-STR3 db 'CALCULATED AX: $'
-STR4 db 'SAVED CX2 : $'
-
-WORD_BUF     db '000000000000000$'
+PASS_BUF     db '000000000000000$'
 LOOP_COUNTER dw 20d
 
 end Start
