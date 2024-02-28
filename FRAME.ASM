@@ -1,8 +1,3 @@
-.model tiny
-.code
-.286
-org 100h
-
 ;------------------------------------------------
 ;Prints frame and string in it
 ;Entry: ds:si - memory with frame info begin
@@ -35,6 +30,8 @@ PrintFrame proc
 
         ret
         endp    
+
+        
 ;------------------------------------------------
 ;Prints one line of the frame
 ;Entry: ds:si - points to the beginning of the 3-chars array (left, middle, right)
@@ -363,15 +360,18 @@ PrintString proc
         mul cx
         add di, ax
 
-        ;xor cx, cx
-        ;mov cl, ds:[80h]  ; length of the command line
-        ;add cx, 81h
-        ;sub cx, si
+        push ax di es
+        mov ax, ds
+        mov es, ax
+        mov di, si
+        mov al, '$'
+        call StrLen
+        pop es di ax
 
         call CenterString
 
 PrintStringLoop:
-        cmp es: byte ptr[di], '$'
+        cmp ds: byte ptr[si], '$'
         je PrintStringLoopEnd
         movsb
         inc di
@@ -403,6 +403,6 @@ CenterString proc
         ret
         endp
         
-
 FrameChars db 0c9h, 0cdh, 0bbh, 0bah, 20h, 0bah, 0c8h, 0cdh, 0bch,      \
                  3,    3,    3,    3, 20h,    3,    3,    3,    3      
+

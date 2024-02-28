@@ -46,7 +46,7 @@ EndInput:
     cmp ax, si
     je PassSuccess
     
-    mov si, offset cs:SUCCESS_FRAME
+    mov si, offset cs:DENY_FRAME
     call PrintFrame
     jmp TerminateProgram
 
@@ -87,7 +87,7 @@ Print proc
     ret
     endp
 
-INCLUDE FRAME.ASM
+include frame.asm
 
 SUCCESS_FRAME db '40 15 7a 1 permission success$'
 DENY_FRAME    db '40 15 40 1 permission denied$'
