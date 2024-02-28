@@ -83,43 +83,10 @@ EndInput:
     ret
     endp
 
-
-; ax - print, dx - str
-Print proc 
-    mov bx, ax
-    mov ah, 09h
-    int 21h
-    mov ax, bx
-
-    mov     bx,10d          ;CONST
-    xor     cx,cx          ;Reset counter
-.a: xor     dx,dx          ;Setup for division DX:AX / BX
-    div     bx             ; -> AX is Quotient, Remainder DX=[0,9]
-    push    dx             ;(1) Save remainder for now
-    inc     cx             ;One more digit
-    test    ax,ax          ;Is quotient zero?
-    jnz     .a             ;No, use as next dividend
-.b: pop     dx             ;(1)
-    add     dl,'0'         ;Turn into character [0,9] -> ["0","9"]
-    mov     ah,02h         ;DOS.DisplayCharacter
-    int     21h            ; -> AL
-    loop    .b
-    mov dl, 0ah
-    mov ah, 02h
-    int 21h
-
-    ret
-    endp
-
 include frame.asm
 
 SUCCESS_FRAME db '40 15 7a 1 permission success$'
 DENY_FRAME    db '40 15 40 1 permission denied$'
-
-;STR1 db 'READEN VAL: $'
-;STR2 db 'SAVED CX1 : $'
-;STR3 db 'CALCULATED AX: $'
-;STR4 db 'SAVED CX2 : $'
 
 CORRECT_PASS_HASH dw 63231d
 PASS_BUF          db '000000000000000$'
