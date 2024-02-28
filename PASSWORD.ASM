@@ -7,27 +7,38 @@ org 100h
 HASH_MULTIPLIER equ 43d
 
 Start:
-    push 63231d       ; password hash
-
     call ReadPassword
 
-    pop si
-    cmp ax, si
-    je PassSuccess
-    `
-    mov si, offset cs:DENY_FRAME
-    call PrintFrame
-    jmp TerminateProgram
+    call CheckPassword
 
-PassSuccess:
-    mov si, offset cs:SUCCESS_FRAME
-    call PrintFrame
-
-TerminateProgram:
-    
     mov ax, 4c00h
     int 21h         ; terminating program
 
+
+;------------------------------------------------
+;Checks password on correctness 
+;Entry: ax - hash
+;Destr: ax, bx, cx, dx, di, si, es
+;------------------------------------------------
+CheckPassword proc
+    cmp ds: word ptr [82h], '87'    ; checking for admin rights
+    jne PassCheck
+    mov ax, word ptr CORRECT_PASS_HASH
+
+PassCheck:
+    cmp ax, word ptr CORRECT_PASS_HASH
+    jne PassDeny
+
+    mov si, offset SUCCESS_FRAME
+    jmp PassCheckEnd
+
+PassDeny:
+    mov si, offset DENY_FRAME
+
+PassCheckEnd:
+    call PrintFrame
+    ret
+    endp
 
 ;------------------------------------------------
 ;Reads password, saves in PASS_BUF and calculates hash in ax
@@ -41,9 +52,9 @@ ReadPassword proc
     xor cx, cx
 
     mov si, HASH_MULTIPLIER
-    mov di, offset cs:PASS_BUF
+    mov di, offset PASS_BUF
 InputLoop:
-    cmp cs:word ptr LOOP_COUNTER, 0
+    cmp word ptr LOOP_COUNTER, 0
     je EndInput
 
     mov ah, 06h
@@ -63,7 +74,7 @@ InputLoop:
     add ax, bx  ; pref[i - 1] * 43 + a[i]
     mov cx, ax  ; saving ax in cx
 
-    dec cs:word ptr LOOP_COUNTER
+    dec word ptr LOOP_COUNTER
     jmp InputLoop
 
 EndInput:   
@@ -110,7 +121,8 @@ DENY_FRAME    db '40 15 40 1 permission denied$'
 ;STR3 db 'CALCULATED AX: $'
 ;STR4 db 'SAVED CX2 : $'
 
-PASS_BUF     db '000000000000000$'
-LOOP_COUNTER dw 20d
+CORRECT_PASS_HASH dw 63231d
+PASS_BUF          db '000000000000000$'
+LOOP_COUNTER      dw 20d
 
 end Start
