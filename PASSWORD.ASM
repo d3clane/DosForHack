@@ -16,7 +16,7 @@ Start:
     mov si, HASH_MULTIPLIER
     mov di, offset cs:WORD_BUF
 InputLoop:
-    cmp cs:LOOP_COUNTER, 0
+    cmp cs:word ptr LOOP_COUNTER, 0
     je EndInput
 
     mov ah, 06h
@@ -25,17 +25,6 @@ InputLoop:
     jz InputLoop    ; no input -> loop
 
     xor ah, ah
-
-    push ax bx cx dx si di
-    mov dx, offset cs:STR1
-    call Print
-    pop di si dx cx bx ax
-
-    push ax bx cx dx si di
-    mov ax, cx
-    mov dx, offset cs:STR2
-    call Print
-    pop di si dx cx bx ax
 
     cmp al, '$'    ; '$' symbol = end
     je EndInput
@@ -47,18 +36,7 @@ InputLoop:
     add ax, bx  ; pref[i - 1] * 43 + a[i]
     mov cx, ax  ; saving ax in cx
 
-    push ax bx cx dx si di
-    mov dx, offset cs:STR3
-    call Print
-    pop di si dx cx bx ax
-
-    push ax bx cx dx si di
-    mov ax, cx
-    mov dx, offset cs:STR4
-    call Print
-    pop di si dx cx bx ax
-
-    dec cs:LOOP_COUNTER
+    dec cs:word ptr LOOP_COUNTER
     jmp InputLoop
 
 EndInput:   
@@ -68,20 +46,19 @@ EndInput:
     cmp ax, si
     je PassSuccess
     
-    mov ah, 09h
-    mov dx, offset cs:DENY_STR
-    int 21h
+    mov si, offset cs:SUCCESS_FRAME
+    call PrintFrame
     jmp TerminateProgram
 
 PassSuccess:
-    mov ah, 09h
-    mov dx, offset cs:SUCCESS_STR
-    int 21h
+    mov si, offset cs:SUCCESS_FRAME
+    call PrintFrame
 
 TerminateProgram:
-
+    
     mov ax, 4c00h
     int 21h         ; terminating program
+
 
 ; ax - print, dx - str
 Print proc 
@@ -109,6 +86,11 @@ Print proc
 
     ret
     endp
+
+INCLUDE FRAME.ASM
+
+SUCCESS_FRAME db '40 15 7a 1 permission success$'
+DENY_FRAME    db '40 15 40 1 permission denied$'
 
 SUCCESS_STR db 'permission success$'
 DENY_STR    db 'permission denied$'
